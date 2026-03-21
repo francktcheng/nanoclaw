@@ -17,7 +17,10 @@ export class NullChannel implements Channel {
 
   async sendMessage(_jid: string, _text: string): Promise<void> {
     // No-op - no actual messaging in headless mode
-    logger.debug({ _text }, 'Null channel: message would be sent (headless mode)');
+    logger.debug(
+      { _text },
+      'Null channel: message would be sent (headless mode)',
+    );
   }
 
   isConnected(): boolean {

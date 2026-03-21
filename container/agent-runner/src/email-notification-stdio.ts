@@ -1,6 +1,6 @@
 /**
  * Email Notification MCP Server
- * Sends emails via shell sendmail command
+ * Sends emails via Gmail SMTP
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -9,7 +9,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { execSync } from 'child_process';
+import { createTransport, TransportOptions } from 'nodemailer';
 
 interface EmailToolArgs {
   to: string;
@@ -19,31 +19,25 @@ interface EmailToolArgs {
   bcc?: string;
 }
 
-function createEmailContent(args: EmailToolArgs): string {
-  const lines: string[] = [];
-
-  lines.push(`To: ${args.to}`);
-  lines.push(`Subject: ${args.subject}`);
-
-  if (args.cc) {
-    lines.push(`Cc: ${args.cc}`);
-  }
-
-  lines.push('');
-  lines.push(args.body);
-
-  return lines.join('\n');
-}
-
 function sendEmail(args: EmailToolArgs): { success: boolean; error?: string } {
   try {
-    const content = createEmailContent(args);
+    const transporter = createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASSWORD,
+      },
+    } as TransportOptions);
 
-    // Use sendmail to send the email
-    const sendmail = execSync('/usr/sbin/sendmail -t', {
-      input: content,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
+    transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: args.to,
+      subject: args.subject,
+      text: args.body,
+      cc: args.cc,
+      bcc: args.bcc,
     });
 
     return { success: true };
@@ -63,7 +57,7 @@ async function main(): Promise<void> {
     tools: [
       {
         name: 'send_email',
-        description: 'Send an email notification via sendmail. Use this to notify the user of important events, alerts, or summaries.',
+        description: 'Send an email notification via Gmail SMTP. Use this to notify the user of important events, alerts, or summaries.',
         inputSchema: {
           type: 'object',
           properties: {
