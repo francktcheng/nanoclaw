@@ -142,15 +142,15 @@ function searchTavily(query: string, maxResults: number): Promise<SearchResult[]
 
 async function main(): Promise<void> {
   const server = new Server(
-    { name: 'web-search', version: '1.0.0' },
+    { name: 'search', version: '1.0.0' },
     { capabilities: { tools: {} } }
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
       {
-        name: 'web_search',
-        description: 'Search the web using Tavily Search API. Returns current web search results with AI-optimized answers. Free tier: 1,000 searches/month.',
+        name: 'search',
+        description: 'Search the web using Tavily Search API. Returns current web search results with AI-optimized answers. Free tier: 1,000 searches/month. This is the default search tool for NanoClaw.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -172,7 +172,7 @@ async function main(): Promise<void> {
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
 
-    if (name === 'web_search') {
+    if (name === 'search') {
       const params = args as Record<string, unknown> | undefined;
       const searchArgs: SearchArgs = {
         query: String(params?.query ?? ''),

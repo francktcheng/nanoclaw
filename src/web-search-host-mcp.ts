@@ -21,7 +21,11 @@ function escapeAppleScript(str: string): string {
   return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ');
 }
 
-function searchWeb(args: SearchArgs): { success: boolean; results?: string[]; error?: string } {
+function searchWeb(args: SearchArgs): {
+  success: boolean;
+  results?: string[];
+  error?: string;
+} {
   try {
     const escapedQuery = escapeAppleScript(args.query);
     const maxResults = args.maxResults || 10;
@@ -58,7 +62,9 @@ function searchWeb(args: SearchArgs): { success: boolean; results?: string[]; er
       end tell
     `;
 
-    const singleLineScript = appleScript.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+    const singleLineScript = appleScript
+      .replace(/\n/g, ' ')
+      .replace(/\s+/g, ' ');
 
     const result = execSync(`osascript -e '${singleLineScript}'`, {
       encoding: 'utf-8',
@@ -67,8 +73,9 @@ function searchWeb(args: SearchArgs): { success: boolean; results?: string[]; er
     });
 
     const results = JSON.parse(result.trim());
-    const formattedResults = results.map((r: { title: string; url: string; snippet: string }) =>
-      `Title: ${r.title}\nURL: ${r.url}\nSnippet: ${r.snippet || 'No snippet'}`
+    const formattedResults = results.map(
+      (r: { title: string; url: string; snippet: string }) =>
+        `Title: ${r.title}\nURL: ${r.url}\nSnippet: ${r.snippet || 'No snippet'}`,
     );
 
     return { success: true, results: formattedResults };
@@ -81,14 +88,15 @@ function searchWeb(args: SearchArgs): { success: boolean; results?: string[]; er
 async function main(): Promise<void> {
   const server = new Server(
     { name: 'web-search', version: '1.0.0' },
-    { capabilities: { tools: {} } }
+    { capabilities: { tools: {} } },
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
       {
         name: 'web_search',
-        description: 'Search the web using Safari browser on macOS. Returns search results from DuckDuckGo.',
+        description:
+          'Search the web using Safari browser on macOS. Returns search results from DuckDuckGo.',
         inputSchema: {
           type: 'object',
           properties: {
