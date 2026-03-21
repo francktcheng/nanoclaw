@@ -433,6 +433,10 @@ async function runQuery(
           command: 'node',
           args: [path.join(__dirname, 'email-notification-stdio.js')],
         },
+        websearch: {
+          command: 'node',
+          args: [path.join(__dirname, 'web-search-stdio.js')],
+        },
       },
       hooks: {
         PreCompact: [{ hooks: [createPreCompactHook(containerInput.assistantName)] }],
