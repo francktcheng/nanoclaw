@@ -455,6 +455,50 @@ export async function processTaskIpc(
       }
       break;
 
+    case 'update_container_config':
+      // Only main group can update container config
+      if (!isMain) {
+        logger.warn(
+          { sourceGroup },
+          'Unauthorized update_container_config attempt blocked',
+        );
+        break;
+      }
+      if (data.groupFolder && data.containerConfig) {
+        // Find the existing group by folder and merge config
+        const registeredGroups = deps.registeredGroups();
+        const existingEntry = Object.entries(registeredGroups).find(
+          ([, g]) => g.folder === data.groupFolder
+        );
+        if (existingEntry) {
+          const [jid, existingGroup] = existingEntry;
+          // Merge the new containerConfig with existing group
+          const updatedGroup: RegisteredGroup = {
+            ...existingGroup,
+            containerConfig: {
+              ...existingGroup.containerConfig,
+              ...data.containerConfig,
+            },
+          };
+          deps.registerGroup(jid, updatedGroup);
+          logger.info(
+            { groupFolder: data.groupFolder, config: data.containerConfig },
+            'Container config updated',
+          );
+        } else {
+          logger.warn(
+            { groupFolder: data.groupFolder },
+            'Group not found for container config update',
+          );
+        }
+      } else {
+        logger.warn(
+          { data },
+          'Invalid update_container_config request - missing required fields',
+        );
+      }
+      break;
+
     default:
       logger.warn({ type: data.type }, 'Unknown IPC task type');
   }

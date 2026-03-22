@@ -333,6 +333,45 @@ Use available_groups.json to find the JID for a group. The folder name must be c
   },
 );
 
+server.tool(
+  'update_container_config',
+  'Update the container configuration for the current group to add additional mount paths. Main group only.',
+  {
+    additionalMounts: z.array(z.object({
+      hostPath: z.string().describe('Host path to mount (must be in allowlist ~/.config/nanoclaw/mount-allowlist.json)'),
+      containerPath: z.string().describe('Container path name (will be mounted at /workspace/extra/{containerPath})'),
+      readonly: z.boolean().optional().describe('Whether the mount is read-only'),
+    })).describe('List of additional mounts to add'),
+  },
+  async (args) => {
+    if (!isMain) {
+      return {
+        content: [{ type: 'text' as const, text: 'Only the main group can update container config.' }],
+        isError: true,
+      };
+    }
+
+    const data = {
+      type: 'update_container_config',
+      groupFolder: groupFolder,
+      containerConfig: {
+        additionalMounts: args.additionalMounts,
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    writeIpcFile(TASKS_DIR, data);
+
+    const mountPaths = args.additionalMounts.map((m: { hostPath: string; containerPath: string }) =>
+      `${m.hostPath} -> /workspace/extra/${m.containerPath}`
+    ).join(', ');
+
+    return {
+      content: [{ type: 'text' as const, text: `Container config updated. Additional mounts: ${mountPaths}` }],
+    };
+  },
+);
+
 // Start the stdio transport
 const transport = new StdioServerTransport();
 await server.connect(transport);
