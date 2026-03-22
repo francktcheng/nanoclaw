@@ -61,7 +61,8 @@ export function startIpcWatcher(deps: IpcDeps): void {
 
     for (const sourceGroup of groupFolders) {
       // Treat "main" folder as main even if not yet registered (bootstrap)
-      const isMain = sourceGroup === 'main' || folderIsMain.get(sourceGroup) === true;
+      const isMain =
+        sourceGroup === 'main' || folderIsMain.get(sourceGroup) === true;
       const messagesDir = path.join(ipcBaseDir, sourceGroup, 'messages');
       const tasksDir = path.join(ipcBaseDir, sourceGroup, 'tasks');
 
